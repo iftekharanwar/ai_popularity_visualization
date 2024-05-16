@@ -40,16 +40,40 @@ function App() {
 
   // Function to normalize app details data for model prediction
   function normalizeData(appDetails) {
-    // Example maximum values for numerical features
-    const maxValues = {
-      Rating: 5,
-      Reviews: 10000000,
-      Size: 100,
-      Price: 400,
+    // Validate appDetails properties
+    const validateProperties = (details) => {
+      const isNumber = (value) => typeof value === 'number' && !isNaN(value);
+      const isString = (value) => typeof value === 'string' && value.trim() !== '';
+      const isValidCategory = (value) => categories.includes(value);
+      const isValidType = (value) => types.includes(value);
+      const isValidGenre = (value) => genres.includes(value.split(';')[0]);
+
+      if (!isNumber(details.Rating) || details.Rating < 0 || details.Rating > 5 ||
+          !isNumber(details.Reviews) || details.Reviews < 0 ||
+          !isNumber(details.Size) || details.Size < 0 ||
+          !isNumber(details.Price) || details.Price < 0 ||
+          !isString(details.Category) || !isValidCategory(details.Category) ||
+          !isString(details.Type) || !isValidType(details.Type) ||
+          !isString(details.Genres) || !isValidGenre(details.Genres)) {
+        throw new Error('Invalid app details');
+      }
     };
 
-    // Example unique categories for one-hot encoding
-    const uniqueCategories = ['ART_AND_DESIGN', 'AUTO_AND_VEHICLES', 'BEAUTY', 'BOOKS_AND_REFERENCE', 'BUSINESS', 'COMICS', 'COMMUNICATION', 'DATING', 'EDUCATION', 'ENTERTAINMENT', 'EVENTS', 'FINANCE', 'FOOD_AND_DRINK', 'HEALTH_AND_FITNESS', 'HOUSE_AND_HOME', 'LIBRARIES_AND_DEMO', 'LIFESTYLE', 'GAME', 'FAMILY', 'MEDICAL', 'SOCIAL', 'SHOPPING', 'PHOTOGRAPHY', 'SPORTS', 'TRAVEL_AND_LOCAL', 'TOOLS', 'PERSONALIZATION', 'PRODUCTIVITY', 'PARENTING', 'WEATHER', 'VIDEO_PLAYERS', 'NEWS_AND_MAGAZINES', 'MAPS_AND_NAVIGATION'];
+    // Static maximum values for numerical features based on the training dataset
+    const maxValues = {
+      Rating: 5, // Assuming the rating is out of 5
+      Reviews: 10000000, // Actual maximum value from the training dataset
+      Size: 100, // Actual maximum value from the training dataset
+      Price: 400, // Actual maximum value from the training dataset
+    };
+
+    // Unique categories, types, and genres based on the training dataset
+    const categories = ['ART_AND_DESIGN', 'AUTO_AND_VEHICLES', 'BEAUTY', 'BOOKS_AND_REFERENCE', 'BUSINESS', 'COMICS', 'COMMUNICATION', 'DATING', 'EDUCATION', 'ENTERTAINMENT', 'EVENTS', 'FINANCE', 'FOOD_AND_DRINK', 'HEALTH_AND_FITNESS', 'HOUSE_AND_HOME', 'LIBRARIES_AND_DEMO', 'LIFESTYLE', 'GAME', 'FAMILY', 'MEDICAL', 'SOCIAL', 'SHOPPING', 'PHOTOGRAPHY', 'SPORTS', 'TRAVEL_AND_LOCAL', 'TOOLS', 'PERSONALIZATION', 'PRODUCTIVITY', 'PARENTING', 'WEATHER', 'VIDEO_PLAYERS', 'NEWS_AND_MAGAZINES', 'MAPS_AND_NAVIGATION'];
+    const types = ['Free', 'Paid'];
+    const genres = ['Action', 'Puzzle', 'Strategy', 'Casual', 'Arcade', 'Card', 'Board', 'Simulation', 'Word', 'Trivia', 'Adventure', 'Music', 'Role Playing', 'Racing', 'Sports', 'Family', 'Educational', 'Casino']; // Actual genres from the training dataset
+
+    // Validate the appDetails object
+    validateProperties(appDetails);
 
     // Normalize numerical features
     const normalizedRating = appDetails.Rating / maxValues.Rating;
@@ -58,7 +82,9 @@ function App() {
     const normalizedPrice = appDetails.Price / maxValues.Price;
 
     // One-hot encode categorical features
-    const categoryEncoding = uniqueCategories.map(category => appDetails.Category === category ? 1 : 0);
+    const categoryEncoding = categories.map(category => appDetails.Category === category ? 1 : 0);
+    const typeEncoding = types.map(type => appDetails.Type === type ? 1 : 0);
+    const genreEncoding = genres.map(genre => appDetails.Genres.split(';')[0] === genre ? 1 : 0);
 
     // Combine all features into a single array
     const normalizedData = [
@@ -67,6 +93,8 @@ function App() {
       normalizedSize,
       normalizedPrice,
       ...categoryEncoding,
+      ...typeEncoding,
+      ...genreEncoding,
     ];
 
     return normalizedData;
