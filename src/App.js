@@ -161,8 +161,11 @@ function App() {
 
   // Function to format prediction data for the chart
   function formatPredictionData(prediction) {
+    console.log('Raw prediction data:', prediction); // Log raw prediction data for debugging
+
     // Convert Float32Array to regular array if necessary
     const predictionArray = prediction instanceof Float32Array ? Array.from(prediction) : prediction;
+    console.log('Formatted prediction array:', predictionArray); // Log formatted prediction array for debugging
 
     // Ensure the prediction is an array with 12 values representing the popularity over time
     if (!Array.isArray(predictionArray) || predictionArray.length !== 12) {
@@ -185,6 +188,7 @@ function App() {
     // Create labels for each month assuming the prediction data is monthly for the past 12 months
     const labels = Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`);
     const data = predictionArray; // Use the prediction data directly for the chart
+    console.log('Final chart data:', { labels, data }); // Log final chart data for debugging
 
     return {
       labels: labels,
