@@ -152,7 +152,7 @@ function App() {
 
     try {
       // Replace the server-side code with a fetch request to the server endpoint
-      const response = await fetch(`https://app-popularity-tracker-yznd6jop.devinapps.com/api/data/${encodeURIComponent(appName)}`);
+      const response = await fetch(`https://app-popularity-tracker-tdl0r057.devinapps.com/api/data/${encodeURIComponent(appName)}`);
       if (!response.ok) {
         // Set error message and flag
         setErrorMessage(`HTTP error! status: ${response.status}`);

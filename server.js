@@ -9,8 +9,8 @@ const { parse } = require('csv-parse/sync'); // Corrected import statement for c
 // Enable all CORS requests
 app.use(cors());
 
-// Serve all static files in the 'public/model' directory
-app.use('/model', express.static(path.join(__dirname, 'public', 'model')));
+// Serve all static files in the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Specific route to serve 'model.json'
 app.get('/model/model.json', (req, res) => {
