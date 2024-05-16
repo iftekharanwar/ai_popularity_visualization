@@ -109,7 +109,7 @@ function App() {
   async function fetchDataForApp(appName) {
     try {
       // Replace the server-side code with a fetch request to the server endpoint
-      const response = await fetch(`/api/data/${encodeURIComponent(appName)}`);
+      const response = await fetch(`https://app-popularity-tracker-yznd6jop.devinapps.com/api/data/${encodeURIComponent(appName)}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
