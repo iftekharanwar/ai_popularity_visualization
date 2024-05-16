@@ -38,6 +38,40 @@ function App() {
     loadModel();
   }, []);
 
+  // Function to normalize app details data for model prediction
+  function normalizeData(appDetails) {
+    // Example maximum values for numerical features
+    const maxValues = {
+      Rating: 5,
+      Reviews: 10000000,
+      Size: 100,
+      Price: 400,
+    };
+
+    // Example unique categories for one-hot encoding
+    const uniqueCategories = ['ART_AND_DESIGN', 'AUTO_AND_VEHICLES', 'BEAUTY', 'BOOKS_AND_REFERENCE', 'BUSINESS', 'COMICS', 'COMMUNICATION', 'DATING', 'EDUCATION', 'ENTERTAINMENT', 'EVENTS', 'FINANCE', 'FOOD_AND_DRINK', 'HEALTH_AND_FITNESS', 'HOUSE_AND_HOME', 'LIBRARIES_AND_DEMO', 'LIFESTYLE', 'GAME', 'FAMILY', 'MEDICAL', 'SOCIAL', 'SHOPPING', 'PHOTOGRAPHY', 'SPORTS', 'TRAVEL_AND_LOCAL', 'TOOLS', 'PERSONALIZATION', 'PRODUCTIVITY', 'PARENTING', 'WEATHER', 'VIDEO_PLAYERS', 'NEWS_AND_MAGAZINES', 'MAPS_AND_NAVIGATION'];
+
+    // Normalize numerical features
+    const normalizedRating = appDetails.Rating / maxValues.Rating;
+    const normalizedReviews = appDetails.Reviews / maxValues.Reviews;
+    const normalizedSize = appDetails.Size / maxValues.Size;
+    const normalizedPrice = appDetails.Price / maxValues.Price;
+
+    // One-hot encode categorical features
+    const categoryEncoding = uniqueCategories.map(category => appDetails.Category === category ? 1 : 0);
+
+    // Combine all features into a single array
+    const normalizedData = [
+      normalizedRating,
+      normalizedReviews,
+      normalizedSize,
+      normalizedPrice,
+      ...categoryEncoding,
+    ];
+
+    return normalizedData;
+  }
+
   // Function to handle search and update chart data
   const handleSearch = async (appName) => {
     if (!model) {
@@ -64,99 +98,36 @@ function App() {
       console.log('Updated chartData within setChartData:', updatedChartData); // Log the updated chartData for debugging
       return updatedChartData;
     });
-    // This log statement is removed as it does not accurately reflect the updated state
   };
 
   // Log the updated chartData state for debugging
   useEffect(() => {
     console.log('Chart data being passed to component:', chartData); // Log the chartData after state update
-    console.log('Updated chartData state:', chartData);
   }, [chartData]);
 
   // Function to fetch data using the AI model
   async function fetchDataForApp(appName) {
     try {
-      const fs = require('fs');
-      const parse = require('csv-parse/lib/sync');
-      const appsCsv = fs.readFileSync('apps.csv', 'utf8');
-      const records = parse(appsCsv, {
-        columns: true,
-        skip_empty_lines: true
-      });
-
-      const appDetails = records.find(app => app.App === appName);
-      if (!appDetails) {
-        throw new Error(`App ${appName} not found in dataset`);
+      // Replace the server-side code with a fetch request to the server endpoint
+      const response = await fetch(`/api/data/${encodeURIComponent(appName)}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+      const appDetails = await response.json();
 
-      // Actual maximum values from the dataset for normalization
-      const maxValues = {
-        rating: 5, // Maximum rating value
-        reviews: 78158306, // Maximum number of reviews
-        size: 100, // Maximum size in MB
-        price: 400, // Maximum price
-      };
+      // Normalize the fetched data
+      const normalizedData = normalizeData(appDetails);
 
-      // Actual unique categories, types, and genres from the dataset
-      const uniqueCategories = [
-        'ART_AND_DESIGN', 'AUTO_AND_VEHICLES', 'BEAUTY', 'BOOKS_AND_REFERENCE',
-        'BUSINESS', 'COMICS', 'COMMUNICATION', 'DATING', 'EDUCATION',
-        'ENTERTAINMENT', 'EVENTS', 'FINANCE', 'FOOD_AND_DRINK',
-        'HEALTH_AND_FITNESS', 'HOUSE_AND_HOME', 'LIBRARIES_AND_DEMO',
-        'LIFESTYLE', 'GAME', 'FAMILY', 'MEDICAL', 'SOCIAL', 'SHOPPING',
-        'PHOTOGRAPHY', 'SPORTS', 'TRAVEL_AND_LOCAL', 'TOOLS',
-        'PERSONALIZATION', 'PRODUCTIVITY', 'PARENTING', 'WEATHER',
-        'VIDEO_PLAYERS', 'NEWS_AND_MAGAZINES', 'MAPS_AND_NAVIGATION'
-      ];
-      const uniqueTypes = ['Free', 'Paid'];
-      const uniqueGenres = [
-        'Art & Design', 'Pretend Play', 'Creativity', 'Action & Adventure',
-        'Auto & Vehicles', 'Beauty', 'Books & Reference', 'Business', 'Comics',
-        'Communication', 'Dating', 'Education', 'Music & Video', 'Brain Games',
-        'Entertainment', 'Events', 'Finance', 'Food & Drink', 'Health & Fitness',
-        'House & Home', 'Libraries & Demo', 'Lifestyle', 'Adventure', 'Arcade',
-        'Casual', 'Card', 'Action', 'Strategy', 'Puzzle', 'Sports', 'Music',
-        'Word', 'Racing', 'Simulation', 'Board', 'Trivia', 'Role Playing',
-        'Educational', 'Music & Audio', 'Video Players & Editors', 'Medical',
-        'Social', 'Shopping', 'Photography', 'Travel & Local', 'Tools',
-        'Personalization', 'Productivity', 'Parenting', 'Weather',
-        'News & Magazines', 'Maps & Navigation', 'Casino'
-      ];
-
-      // Normalize numeric features
-      const normalizedNumericFeatures = [
-        parseFloat(appDetails.Rating) / maxValues.rating,
-        parseInt(appDetails.Reviews.replace(/,/g, '')) / maxValues.reviews,
-        appDetails.Size.endsWith('M') ? parseFloat(appDetails.Size) : 0, // Assuming 'M' denotes 'MB'
-        parseFloat(appDetails.Price.replace('$', '')) / maxValues.price
-      ];
-
-      // One-hot encode categorical features
-      const categoryOneHot = uniqueCategories.map(category => category === appDetails.Category ? 1 : 0);
-      const typeOneHot = uniqueTypes.map(type => type === appDetails.Type ? 1 : 0);
-      const genreOneHot = uniqueGenres.map(genre => genre === appDetails.Genres ? 1 : 0);
-
-      // Combine one-hot encoded and numeric features to match the model's expected input shape
-      const inputFeatures = [...normalizedNumericFeatures, ...categoryOneHot, ...typeOneHot, ...genreOneHot];
-
-      // Ensure the input features array has a length of 87
-      if (inputFeatures.length !== 87) {
-        throw new Error(`The input features array length is ${inputFeatures.length}, expected 87`);
-      }
-
-      // Convert the combined features array to a 2D tensor with the correct shape
-      const inputTensor = tf.tensor2d([inputFeatures], [1, 87]);
-
-      // Make a prediction using the model
-      const prediction = await model.predict(inputTensor).data();
+      // Predict the popularity using the AI model
+      const prediction = await model.predict(tf.tensor2d([normalizedData], [1, normalizedData.length])).data();
 
       // Format the prediction data for the chart
       const formattedData = formatPredictionData(prediction);
 
       return formattedData;
+
     } catch (error) {
-      console.error('Error fetching data for app:', error);
-      return { labels: [], data: [] }; // Return empty data on error
+      console.error('Error fetching data for app', error);
     }
   }
 
