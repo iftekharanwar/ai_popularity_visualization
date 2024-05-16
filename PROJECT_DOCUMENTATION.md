@@ -48,11 +48,11 @@ To deploy the frontend application to Netlify and expose the Express server to t
    This command creates an optimized production build of your app in the `build` directory.
 
 2. Deploy the build to Netlify:
-   - Ensure you have the Netlify CLI installed by running `npm install netlify-cli -g`.
-   - Login to your Netlify account using `netlify login`.
-   - Deploy the application using `netlify deploy --prod --dir=build`.
+   - Compress the `build` directory into a zip file named `build.zip`.
+   - Navigate to your Netlify account's Sites page.
+   - Drag and drop the `build.zip` file into the designated area or use the upload option to manually upload the file.
+   - After the upload is complete, Netlify will automatically deploy the application.
    - Note the unique URL provided by Netlify after deployment.
-   - Ensure the Netlify CLI is up to date by running `npm update netlify-cli -g`.
 
 3. Expose the Express server:
    - Run the Express server on your local machine.
