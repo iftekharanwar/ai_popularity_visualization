@@ -19,6 +19,8 @@ function App() {
   });
 
   const [model, setModel] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [hasError, setHasError] = useState(false);
 
   // Load the TensorFlow.js model
   useEffect(() => {
@@ -109,6 +111,15 @@ function App() {
     // Fetch data for the app name using the AI model
     const fetchedData = await fetchDataForApp(appName);
 
+    // Check if fetchedData is undefined before proceeding
+    if (fetchedData === undefined) {
+      // If fetchedData is undefined, do not attempt to update chartData
+      // Set error message and flag
+      setErrorMessage('No data found for the specified app name.');
+      setHasError(true);
+      return; // Exit the function early
+    }
+
     // Log the fetched data for debugging
     console.log('Fetched data:', fetchedData);
 
@@ -135,11 +146,18 @@ function App() {
 
   // Function to fetch data using the AI model
   async function fetchDataForApp(appName) {
+    // Reset error state before initiating a new search
+    setErrorMessage('');
+    setHasError(false);
+
     try {
       // Replace the server-side code with a fetch request to the server endpoint
       const response = await fetch(`https://app-popularity-tracker-yznd6jop.devinapps.com/api/data/${encodeURIComponent(appName)}`);
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        // Set error message and flag
+        setErrorMessage(`HTTP error! status: ${response.status}`);
+        setHasError(true);
+        return; // Exit the function if there is an HTTP error
       }
       const appDetails = await response.json();
 
@@ -155,6 +173,9 @@ function App() {
       return formattedData;
 
     } catch (error) {
+      // Set error message and flag
+      setErrorMessage('Error fetching data for app: ' + error.message);
+      setHasError(true);
       console.error('Error fetching data for app', error);
     }
   }
@@ -199,6 +220,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
+        {hasError && <div className="error-message">{errorMessage}</div>}
         <SearchBar onSearch={handleSearch} />
         <PopularityChart chartData={chartData} />
       </header>
