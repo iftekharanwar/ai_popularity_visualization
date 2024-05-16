@@ -76,11 +76,24 @@ function App() {
   // Function to fetch data using the AI model
   async function fetchDataForApp(appName) {
     try {
+      const fs = require('fs');
+      const parse = require('csv-parse/lib/sync');
+      const appsCsv = fs.readFileSync('apps.csv', 'utf8');
+      const records = parse(appsCsv, {
+        columns: true,
+        skip_empty_lines: true
+      });
+
+      const appDetails = records.find(app => app.App === appName);
+      if (!appDetails) {
+        throw new Error(`App ${appName} not found in dataset`);
+      }
+
       // Actual maximum values from the dataset for normalization
       const maxValues = {
         rating: 5, // Maximum rating value
         reviews: 78158306, // Maximum number of reviews
-        size: 100, // Placeholder for maximum size (to be updated)
+        size: 100, // Maximum size in MB
         price: 400, // Maximum price
       };
 
@@ -110,52 +123,35 @@ function App() {
         'News & Magazines', 'Maps & Navigation', 'Casino'
       ];
 
-      // Placeholder for app details to be replaced with actual data retrieval logic
-      const appDetails = {
-        name: appName,
-        category: 'Category1', // Replace with actual category
-        type: 'Free', // Replace with actual type
-        genres: 'Genre1', // Replace with actual genre
-        rating: 4.5, // Replace with actual rating
-        reviews: 100000, // Replace with actual number of reviews
-        size: 50, // Replace with actual size
-        price: 0, // Replace with actual price
-      };
-
       // Normalize numeric features
       const normalizedNumericFeatures = [
-        appDetails.rating / maxValues.rating,
-        appDetails.reviews / maxValues.reviews,
-        appDetails.size / maxValues.size,
-        appDetails.price / maxValues.price,
+        parseFloat(appDetails.Rating) / maxValues.rating,
+        parseInt(appDetails.Reviews.replace(/,/g, '')) / maxValues.reviews,
+        appDetails.Size.endsWith('M') ? parseFloat(appDetails.Size) : 0, // Assuming 'M' denotes 'MB'
+        parseFloat(appDetails.Price.replace('$', '')) / maxValues.price
       ];
 
       // One-hot encode categorical features
-      const categoryOneHot = uniqueCategories.map(category => category === appDetails.category ? 1 : 0);
-      const typeOneHot = uniqueTypes.map(type => type === appDetails.type ? 1 : 0);
-      const genreOneHot = uniqueGenres.map(genre => genre === appDetails.genres ? 1 : 0);
+      const categoryOneHot = uniqueCategories.map(category => category === appDetails.Category ? 1 : 0);
+      const typeOneHot = uniqueTypes.map(type => type === appDetails.Type ? 1 : 0);
+      const genreOneHot = uniqueGenres.map(genre => genre === appDetails.Genres ? 1 : 0);
 
-      // Combine one-hot encoded and numeric features
-      const inputFeatures = normalizedNumericFeatures.concat(categoryOneHot, typeOneHot, genreOneHot);
+      // Combine one-hot encoded and numeric features to match the model's expected input shape
+      const inputFeatures = [...normalizedNumericFeatures, ...categoryOneHot, ...typeOneHot, ...genreOneHot];
 
-      // Convert the combined features array to a 2D tensor
-      const inputTensor = tf.tensor2d(inputFeatures, [1, inputFeatures.length]);
+      // Ensure the input features array has a length of 87
+      if (inputFeatures.length !== 87) {
+        throw new Error(`The input features array length is ${inputFeatures.length}, expected 87`);
+      }
 
-      // Log the input tensor shape for debugging
-      console.log('Input tensor shape:', inputTensor.shape);
+      // Convert the combined features array to a 2D tensor with the correct shape
+      const inputTensor = tf.tensor2d([inputFeatures], [1, 87]);
 
       // Make a prediction using the model
       const prediction = await model.predict(inputTensor).data();
 
-      // Log the prediction shape and content for debugging
-      console.log('Prediction shape:', prediction.length);
-      console.log('Prediction content:', prediction);
-
       // Format the prediction data for the chart
       const formattedData = formatPredictionData(prediction);
-
-      // Additional log to confirm the structure of formattedData
-      console.log('formattedData before return:', formattedData);
 
       return formattedData;
     } catch (error) {
