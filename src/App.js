@@ -46,9 +46,10 @@ function App() {
     const validateProperties = (details) => {
       const isNumber = (value) => typeof value === 'number' && !isNaN(value);
       const isString = (value) => typeof value === 'string' && value.trim() !== '';
-      const isValidCategory = (value) => categories.includes(value);
-      const isValidType = (value) => types.includes(value);
-      const isValidGenre = (value) => genres.includes(value.split(';')[0]);
+      // Relaxing the validation for categories, types, and genres
+      const isValidCategory = (value) => !value || categories.includes(value);
+      const isValidType = (value) => !value || types.includes(value);
+      const isValidGenre = (value) => !value || genres.includes(value.split(';')[0]);
 
       if (!isNumber(details.Rating) || details.Rating < 0 || details.Rating > 5 ||
           !isNumber(details.Reviews) || details.Reviews < 0 ||
