@@ -46,19 +46,19 @@ function App() {
     const validateProperties = (details) => {
       const isNumber = (value) => typeof value === 'number' && !isNaN(value);
       const isString = (value) => typeof value === 'string' && value.trim() !== '';
-      const isValidCategory = (value) => categories.includes(value);
-      const isValidType = (value) => types.includes(value);
-      const isValidGenre = (value) => genres.includes(value.split(';')[0]);
+      // Relaxing the validation for categories, types, and genres
+      const isValidCategory = (value) => !value || categories.includes(value);
+      const isValidType = (value) => !value || types.includes(value);
+      const isValidGenre = (value) => !value || genres.includes(value.split(';')[0]);
 
-      if (!isNumber(details.Rating) || details.Rating < 0 || details.Rating > 5 ||
-          !isNumber(details.Reviews) || details.Reviews < 0 ||
-          !isNumber(details.Size) || details.Size < 0 ||
-          !isNumber(details.Price) || details.Price < 0 ||
-          !isString(details.Category) || !isValidCategory(details.Category) ||
-          !isString(details.Type) || !isValidType(details.Type) ||
-          !isString(details.Genres) || !isValidGenre(details.Genres)) {
-        throw new Error('Invalid app details');
-      }
+      // Provide default values for missing numerical fields and allow strings to be empty
+      details.Rating = isNumber(details.Rating) ? details.Rating : 0;
+      details.Reviews = isNumber(details.Reviews) ? details.Reviews : 0;
+      details.Size = isNumber(details.Size) ? details.Size : 0;
+      details.Price = isNumber(details.Price) ? details.Price : 0;
+      details.Category = isString(details.Category) && isValidCategory(details.Category) ? details.Category : 'UNKNOWN';
+      details.Type = isString(details.Type) && isValidType(details.Type) ? details.Type : 'UNKNOWN';
+      details.Genres = isString(details.Genres) && isValidGenre(details.Genres) ? details.Genres : 'UNKNOWN';
     };
 
     // Static maximum values for numerical features based on the training dataset

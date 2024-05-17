@@ -32,6 +32,15 @@ app.get('/api/data/:appName', (req, res) => {
       return res.status(404).send('App not found');
     }
 
+    // Remove any keys with empty string as key
+    delete appDetails[""];
+
+    // Ensure all numerical fields are actual numbers
+    appDetails.Rating = parseFloat(appDetails.Rating);
+    appDetails.Reviews = parseInt(appDetails.Reviews, 10);
+    appDetails.Size = appDetails.Size ? parseFloat(appDetails.Size) : 0; // Assuming 'Size' should be a number
+    appDetails.Price = parseFloat(appDetails.Price);
+
     // Send the app details as JSON
     res.json(appDetails);
   } catch (error) {
