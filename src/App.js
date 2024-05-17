@@ -31,7 +31,7 @@ function App() {
         // Wait for the backend to be ready
         await tf.ready();
         // Load the model from the specified path
-        const loadedModel = await tf.loadLayersModel('http://localhost:3001/model/model.json');
+        const loadedModel = await tf.loadLayersModel('https://app-popularity-tracker-tdl0r057.devinapps.com/model/model.json');
         setModel(loadedModel);
       } catch (error) {
         console.error('Error loading the model', error);
@@ -173,9 +173,11 @@ function App() {
 
       // Normalize the fetched data
       const normalizedData = normalizeData(appDetails);
-
-      // Predict the popularity using the AI model
+      // Log the normalized data for debugging
+      console.log('Normalized data for prediction:', normalizedData);
       const prediction = await model.predict(tf.tensor2d([normalizedData], [1, normalizedData.length])).data();
+      // Log the prediction data before formatting for debugging
+      console.log('Raw prediction data:', prediction);
 
       // Format the prediction data for the chart
       const formattedData = formatPredictionData(prediction);
@@ -203,30 +205,21 @@ function App() {
     // Log the length of the prediction array for debugging
     console.log('Length of prediction array:', predictionArray.length);
 
-    // Ensure the prediction is an array with 12 values representing the popularity over time
+    // Check if the prediction array length is not as expected
     if (!Array.isArray(predictionArray) || predictionArray.length !== 12) {
-      console.error('Prediction data is not in the expected format:', predictionArray);
-      // For debugging purposes, return a placeholder data set with incremental values
-      return {
-        labels: Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`),
-        data: Array.from({ length: 12 }, (_, i) => i + 1), // Placeholder incremental data
-      };
+      console.error('Prediction data is not in the expected format or length:', predictionArray);
     }
 
     // Check if all values in predictionArray are zero
     const allZeros = predictionArray.every(val => val === 0);
     if (allZeros) {
       console.error('Prediction data contains only zeros:', predictionArray);
-      // For debugging purposes, return a placeholder data set with incremental values
-      return {
-        labels: Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`),
-        data: Array.from({ length: 12 }, (_, i) => i + 1), // Placeholder incremental data
-      };
     }
 
-    // Create labels for each month assuming the prediction data is monthly for the past 12 months
-    const labels = Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`);
+    // Create labels for each month based on the prediction array length
+    const labels = predictionArray.map((_, i) => `Month ${i + 1}`);
     const data = predictionArray; // Use the prediction data directly for the chart
+
     // Log final chart data for debugging
     console.log('Final chart data:', { labels, data });
 
