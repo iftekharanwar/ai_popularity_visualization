@@ -132,7 +132,8 @@ function App() {
 
     // Log the fetched data for debugging
     console.log('Fetched data for chartData update:', fetchedData); // Log the fetchedData for debugging
-    console.log('Fetched data for chartData update:', JSON.stringify(fetchedData, null, 2)); // Log the fetchedData for debugging
+    console.log('Fetched data labels:', fetchedData.labels); // Additional log for debugging labels array
+    console.log('Fetched data data points:', fetchedData.data); // Additional log for debugging data points array
 
     // Update chartData state with the fetched results
     setChartData((prevChartData) => {
