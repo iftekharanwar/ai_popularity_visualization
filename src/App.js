@@ -181,6 +181,8 @@ function App() {
 
       // Format the prediction data for the chart
       const formattedData = formatPredictionData(prediction);
+      // Log the formatted data for debugging
+      console.log('Formatted data for chart:', formattedData);
 
       return formattedData;
 
