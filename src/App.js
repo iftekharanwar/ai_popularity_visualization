@@ -205,20 +205,12 @@ function App() {
     // Log the length of the prediction array for debugging
     console.log('Length of prediction array:', predictionArray.length);
 
-    // Check if the prediction array length is not as expected
-    if (!Array.isArray(predictionArray) || predictionArray.length !== 12) {
-      console.error('Prediction data is not in the expected format or length:', predictionArray);
-    }
+    // If the prediction array length is less than 12, replicate the value to create a full set
+    const fullPredictionArray = new Array(12).fill(predictionArray[0] || 0);
 
-    // Check if all values in predictionArray are zero
-    const allZeros = predictionArray.every(val => val === 0);
-    if (allZeros) {
-      console.error('Prediction data contains only zeros:', predictionArray);
-    }
-
-    // Create labels for each month based on the prediction array length
-    const labels = predictionArray.map((_, i) => `Month ${i + 1}`);
-    const data = predictionArray; // Use the prediction data directly for the chart
+    // Create labels for each month
+    const labels = Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`);
+    const data = fullPredictionArray; // Use the full prediction data for the chart
 
     // Log final chart data for debugging
     console.log('Final chart data:', { labels, data });
