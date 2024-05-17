@@ -99,6 +99,16 @@ function App() {
       ...genreEncoding,
     ];
 
+    // Check if the length of normalizedData matches the expected model input length (87 features)
+    if (normalizedData.length !== 87) {
+      // Log the length discrepancy for debugging
+      console.error(`Normalized data length mismatch: expected 87, got ${normalizedData.length}`);
+      // Pad the array with zeros to match the expected length
+      while (normalizedData.length < 87) {
+        normalizedData.push(0);
+      }
+    }
+
     return normalizedData;
   }
 
