@@ -220,7 +220,7 @@ function App() {
     }
 
     // Log final chart data for debugging
-    console.log('Final chart data:', { labels, data: fullPredictionArray });
+    console.log('Final chart data before return:', { labels, data: fullPredictionArray });
 
     return {
       labels: labels,
