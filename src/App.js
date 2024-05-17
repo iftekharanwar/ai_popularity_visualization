@@ -205,19 +205,23 @@ function App() {
     // Log the length of the prediction array for debugging
     console.log('Length of prediction array:', predictionArray.length);
 
-    // If the prediction array length is less than 12, replicate the value to create a full set
-    const fullPredictionArray = new Array(12).fill(predictionArray[0] || 0);
-
     // Create labels for each month
     const labels = Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`);
-    const data = fullPredictionArray; // Use the full prediction data for the chart
+
+    // If the prediction array length is less than 12, replicate the last value to create a full set
+    let fullPredictionArray;
+    if (predictionArray.length < 12) {
+      fullPredictionArray = [...predictionArray, ...new Array(12 - predictionArray.length).fill(predictionArray[predictionArray.length - 1] || 0)];
+    } else {
+      fullPredictionArray = predictionArray;
+    }
 
     // Log final chart data for debugging
-    console.log('Final chart data:', { labels, data });
+    console.log('Final chart data:', { labels, data: fullPredictionArray });
 
     return {
       labels: labels,
-      data: data,
+      data: fullPredictionArray,
     };
   }
 
