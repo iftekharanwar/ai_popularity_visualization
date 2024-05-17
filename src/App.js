@@ -31,7 +31,7 @@ function App() {
         // Wait for the backend to be ready
         await tf.ready();
         // Load the model from the specified path
-        const loadedModel = await tf.loadLayersModel('http://localhost:3001/model/model.json');
+        const loadedModel = await tf.loadLayersModel('https://app-popularity-tracker-tdl0r057.devinapps.com/model/model.json');
         setModel(loadedModel);
       } catch (error) {
         console.error('Error loading the model', error);
@@ -99,6 +99,16 @@ function App() {
       ...genreEncoding,
     ];
 
+    // Check if the length of normalizedData matches the expected model input length (87 features)
+    if (normalizedData.length !== 87) {
+      // Log the length discrepancy for debugging
+      console.error(`Normalized data length mismatch: expected 87, got ${normalizedData.length}`);
+      // Pad the array with zeros to match the expected length
+      while (normalizedData.length < 87) {
+        normalizedData.push(0);
+      }
+    }
+
     return normalizedData;
   }
 
@@ -121,7 +131,9 @@ function App() {
     }
 
     // Log the fetched data for debugging
-    console.log('Fetched data:', fetchedData);
+    console.log('Fetched data for chartData update:', fetchedData); // Log the fetchedData for debugging
+    console.log('Fetched data labels:', fetchedData.labels); // Additional log for debugging labels array
+    console.log('Fetched data data points:', fetchedData.data); // Additional log for debugging data points array
 
     // Update chartData state with the fetched results
     setChartData((prevChartData) => {
@@ -163,12 +175,16 @@ function App() {
 
       // Normalize the fetched data
       const normalizedData = normalizeData(appDetails);
-
-      // Predict the popularity using the AI model
+      // Log the normalized data for debugging
+      console.log('Normalized data for prediction:', normalizedData);
       const prediction = await model.predict(tf.tensor2d([normalizedData], [1, normalizedData.length])).data();
+      // Log the prediction data before formatting for debugging
+      console.log('Raw prediction data:', prediction);
 
       // Format the prediction data for the chart
       const formattedData = formatPredictionData(prediction);
+      // Log the formatted data for debugging
+      console.log('Formatted data for chart:', formattedData);
 
       return formattedData;
 
@@ -182,38 +198,34 @@ function App() {
 
   // Function to format prediction data for the chart
   function formatPredictionData(prediction) {
-    console.log('Raw prediction data:', prediction); // Log raw prediction data for debugging
+    // Log raw prediction data for debugging
+    console.log('Raw prediction data:', prediction);
 
     // Convert Float32Array to regular array if necessary
     const predictionArray = prediction instanceof Float32Array ? Array.from(prediction) : prediction;
-    console.log('Formatted prediction array:', predictionArray); // Log formatted prediction array for debugging
+    // Log formatted prediction array for debugging
+    console.log('Formatted prediction array:', predictionArray);
 
-    // Ensure the prediction is an array with 12 values representing the popularity over time
-    if (!Array.isArray(predictionArray) || predictionArray.length !== 12) {
-      console.error('Prediction data is not in the expected format:', predictionArray);
-      return { labels: [], data: [] }; // Return empty data if format is incorrect
-    }
+    // Log the length of the prediction array for debugging
+    console.log('Length of prediction array:', predictionArray.length);
 
-    // Check if all values in predictionArray are zero
-    const allZeros = predictionArray.every(val => val === 0);
-    if (allZeros) {
-      console.error('Prediction data contains only zeros:', predictionArray);
-      // If all values are zero, return a sample data set for demonstration purposes
-      // TODO: Replace with actual prediction data once the model is correctly predicting
-      return {
-        labels: Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`),
-        data: Array.from({ length: 12 }, (_, i) => Math.sin(i / 2) * (Math.random() * 10)), // Sample sine wave data
-      };
-    }
-
-    // Create labels for each month assuming the prediction data is monthly for the past 12 months
+    // Create labels for each month
     const labels = Array.from({ length: 12 }, (_, i) => `Month ${i + 1}`);
-    const data = predictionArray; // Use the prediction data directly for the chart
-    console.log('Final chart data:', { labels, data }); // Log final chart data for debugging
+
+    // If the prediction array length is less than 12, replicate the last value to create a full set
+    let fullPredictionArray;
+    if (predictionArray.length < 12) {
+      fullPredictionArray = [...predictionArray, ...new Array(12 - predictionArray.length).fill(predictionArray[predictionArray.length - 1] || 0)];
+    } else {
+      fullPredictionArray = predictionArray;
+    }
+
+    // Log final chart data for debugging
+    console.log('Final chart data before return:', { labels, data: fullPredictionArray });
 
     return {
       labels: labels,
-      data: data,
+      data: fullPredictionArray,
     };
   }
 
